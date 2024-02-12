@@ -71,8 +71,10 @@ namespace view
     }
 }
 
-namespace util
+namespace math
 {
+    const double e = 2.718281828;
+    const double pi = 3.141592654;
 
     bool on_palindrome(int input)
     { // done
@@ -137,13 +139,8 @@ namespace util
     }
 }
 
-const double e = 2.718281828;
-const double pi = 3.141592654;
-
 // int year, date;
 // int month = 1, day = 0;
 // int days_of_month[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 // if (year % 4 == 0 && year % 100 != 0 || year % 400 == 0)
 //     days_of_month[1] = 29;
-
-// 2D dynamic input
