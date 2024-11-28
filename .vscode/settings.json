@@ -43,6 +43,7 @@
     "fstream": "cpp",
     "iomanip": "cpp",
     "limits": "cpp",
-    "typeinfo": "cpp"
+    "typeinfo": "cpp",
+    "queue": "cpp"
   }
 }
