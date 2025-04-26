@@ -21,3 +21,47 @@
 ·1->2
 ·只有7无法到达
 */
+#include <iostream>
+#include <unordered_set>
+#include <vector>
+using namespace std;
+
+int main() {
+    int n, m;
+    cin >> n >> m;
+
+    vector<int> tars(n);
+    for (int i = 0; i < n; i++) {
+        cin >> tars[i];
+    }
+
+    unordered_set<int> banned;
+    for (int i = 0; i < m; i++) {
+        int num;
+        cin >> num;
+        banned.insert(num);
+    }
+
+    int reachable = 0;
+
+    for (int target : tars) {
+        bool able = true;
+        int current = target;
+
+        while (current != 1) {
+            if (banned.count(current)) {
+                able = false;
+                break;
+            }
+            current >>= 1; 
+        }
+
+        if (able && current == 1) {
+            reachable++;
+        }
+    }
+
+    cout << reachable << endl;
+
+    return 0;
+}
