@@ -18,3 +18,31 @@ cabcabca
 是它的子串。
 1≤L≤10^6
 */
+#include <iostream>
+#include <string>
+#include <vector>
+using namespace std;
+
+int main() {
+    int L;
+    cin >> L;
+    string s;
+    cin >> s;
+
+    vector<int> next(L + 1, 0); // next[0]不用，next[1~L]有意义
+    int j = 0;
+    for (int i = 1; i < L; ++i) {
+        while (j > 0 && s[i] != s[j]) {
+            j = next[j];
+        }
+        if (s[i] == s[j]) {
+            j++;
+        }
+        next[i + 1] = j;
+    }
+
+    int len = L - next[L];
+    cout << len << endl;
+
+    return 0;
+}

@@ -16,5 +16,46 @@
 5
 备注
 ·排列为[3,2,1]，每个位置贡献为[0, 1,4]
-·注意结果可能较大，可以用 long long
+·注意结果可能较大，可以用 ll
 */
+#include <algorithm>
+#include <iostream>
+#include <vector>
+using ll = long long;
+using namespace std;
+
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    ll n;
+    cin >> n;
+
+    vector<ll> a(n);
+    for (ll i = 0; i < n; ++i) {
+        cin >> a[i];
+    }
+
+    // 将数组降序排序
+    sort(a.begin(), a.end(), greater<ll>());
+
+    ll total_sum = 0;
+    for (ll num : a) {
+        total_sum += num;
+    }
+
+    ll weighted_sum = 0;
+    ll prefix_sum = a[0];
+    weighted_sum += n * a[0];
+
+    for (ll i = 1; i < n - 1; ++i) {
+        prefix_sum += a[i];
+        weighted_sum += (n - i - 1) * a[i];
+    }
+
+    ll max_contribution = weighted_sum - total_sum;
+
+    cout << max_contribution << endl;
+
+    return 0;
+}
