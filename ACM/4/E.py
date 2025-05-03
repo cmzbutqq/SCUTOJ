@@ -17,3 +17,49 @@
 5
 备注
 '''
+import sys
+from collections import deque
+
+MOD = 10**9 + 7
+
+def main():
+    n = int(sys.stdin.readline())
+    adj = [[] for _ in range(n + 1)]
+    for _ in range(n - 1):
+        u, v = map(int, sys.stdin.readline().split())
+        adj[u].append(v)
+        adj[v].append(u)
+    
+    # Build the tree with parent-child relationships
+    parent = [0] * (n + 1)
+    children = [[] for _ in range(n + 1)]
+    stack = [1]
+    parent[1] = 0  # 0 means no parent
+    while stack:
+        u = stack.pop()
+        for v in adj[u]:
+            if v != parent[u]:
+                parent[v] = u
+                children[u].append(v)
+                stack.append(v)
+    
+    # Post-order traversal to compute dp
+    dp = [1] * (n + 1)
+    stack = [(1, False)]
+    while stack:
+        u, visited = stack.pop()
+        if not visited:
+            stack.append((u, True))
+            # Push children in reverse order to process them in order
+            for v in reversed(children[u]):
+                stack.append((v, False))
+        else:
+            product = 1
+            for v in children[u]:
+                product = (product * dp[v]) % MOD
+            dp[u] = (product + 1) % MOD
+    
+    print(dp[1])
+
+if __name__ == '__main__':
+    main()
