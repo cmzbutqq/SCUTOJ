@@ -15,3 +15,32 @@
 4
 备注
 """
+def min_removals_to_wave(n, h):
+    up = [1] * n
+    down = [1] * n
+
+    # 计算以每个点为结尾的最长严格递增子序列长度
+    for i in range(n):
+        for j in range(i):
+            if h[j] < h[i]:
+                up[i] = max(up[i], up[j] + 1)
+
+    # 计算以每个点为起点的最长严格递减子序列长度
+    for i in reversed(range(n)):
+        for j in range(i+1, n):
+            if h[j] < h[i]:
+                down[i] = max(down[i], down[j] + 1)
+
+    # 枚举每个山峰点，求最长山形子序列
+    max_len = 0
+    for i in range(n):
+        if up[i] > 1 and down[i] > 1:
+            max_len = max(max_len, up[i] + down[i] - 1)
+
+    return n - max_len
+# 输入处理
+n = int(input())
+h = list(map(int, input().split()))
+
+# 输出结果
+print(min_removals_to_wave(n, h))

@@ -22,3 +22,19 @@
 1≤w[i] ≤ C
 0 ≤v[i] ≤10^6
 '''
+n, C = map(int, input().split())
+w = []
+v = []
+for _ in range(n):
+    wi, vi = map(int, input().split())
+    w.append(wi)
+    v.append(vi)
+
+dp = [0] * (C + 1)
+
+for i in range(n):
+    for j in range(C, w[i] - 1, -1):
+        if dp[j - w[i]] + v[i] > dp[j]:
+            dp[j] = dp[j - w[i]] + v[i]
+
+print(dp[C])

@@ -22,3 +22,29 @@
 4
 备注
 '''
+import sys
+input = sys.stdin.readline
+
+MOD = 10**9 + 7
+MAXN = 2 * 10**5 + 10
+
+# 提前预处理斐波那契数列和前缀和
+fib = [0] * MAXN
+pre_sum = [0] * MAXN
+fib[1] = 1
+for i in range(2, MAXN):
+    fib[i] = (fib[i - 1] + fib[i - 2]) % MOD
+for i in range(1, MAXN):
+    pre_sum[i] = (pre_sum[i - 1] + fib[i]) % MOD
+
+# 读入 n 和 q
+n, q = map(int, input().split())
+
+# 处理 q 个查询
+res = []
+for _ in range(q):
+    v = int(input())
+    res.append(str(pre_sum[v]))
+
+# 输出所有答案
+print('\n'.join(res))
