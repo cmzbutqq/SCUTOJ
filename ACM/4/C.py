@@ -21,3 +21,33 @@ N(1≤ N≤2500)个花园宝宝们出来旅游，游玩途中他们遇到了一�
 备注
 最后一批花园宝宝渡河成功后，船夫不需要返回对岸。
 '''
+import sys
+
+def min_ferry_time(N, M, Mi):
+    # 预处理：计算船上有 i 个花园宝宝时一次渡河的总时间（包含船夫和花园宝宝）
+    cost = [0] * (N + 1)
+    cost[0] = M  # 只有船夫
+    for i in range(1, N + 1):
+        cost[i] = cost[i - 1] + Mi[i - 1]
+
+    # dp[i] 表示运送前 i 个花园宝宝到对岸的最短时间
+    dp = [float('inf')] * (N + 1)
+    dp[0] = 0
+
+    for i in range(1, N + 1):
+        for j in range(1, i + 1):
+            current_cost = cost[j]
+            if i != N:
+                current_cost += M  # 如果不是最后一批，还需要船夫返回
+            dp[i] = min(dp[i], dp[i - j] + current_cost)
+
+    return dp[N]
+
+# 输入读取
+if __name__ == "__main__":
+    N_M = input().split()
+    N = int(N_M[0])
+    M = int(N_M[1])
+    Mi = [int(input()) for _ in range(N)]
+    print(min_ferry_time(N, M, Mi))
+

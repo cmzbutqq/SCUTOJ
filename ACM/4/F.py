@@ -22,3 +22,31 @@
 0≤v[i]≤1000000
 1 ≤ s[i] ≤ 1000
 '''
+
+n, M = map(int, input().split())
+w = []
+v = []
+s = []
+for _ in range(n):
+    wi, vi, si = map(int, input().split())
+    w.append(wi)
+    v.append(vi)
+    s.append(si)
+
+items = []
+for i in range(n):
+    k = 1
+    while k <= s[i]:
+        items.append((w[i] * k, v[i] * k))
+        s[i] -= k
+        k *= 2
+    if s[i] > 0:
+        items.append((w[i] * s[i], v[i] * s[i]))
+
+dp = [0] * (M + 1)
+for weight, value in items:
+    for j in range(M, weight - 1, -1):
+        if dp[j - weight] + value > dp[j]:
+            dp[j] = dp[j - weight] + value
+
+print(dp[M])
