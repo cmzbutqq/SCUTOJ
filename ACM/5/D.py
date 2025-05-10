@@ -25,3 +25,6 @@
 【数据范围】
 1≤a,b≤10 ^5000
 '''
+s1= int(input())
+s2= int(input())
+print(s1*s2)
