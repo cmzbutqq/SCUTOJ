@@ -31,3 +31,36 @@ A
 参考巴什博弈
 Python 性能要好
 '''
+def solve(n):
+    """判断谁能获胜
+    
+    通过分析样例和游戏规则，归纳出胜负态规律：
+    1. 当n=1,2,3时，先手无法取走任何合数，所以先手必败
+    2. 当n>=4时：
+       - 如果n是合数，先手可以直接取走全部n个石子获胜
+       - 如果n是质数，先手可以取走(n-2)个石子(这是合数)，使后手面临n=2的局面，后手必败
+    
+    简而言之，除了n=1,2,3的特殊情况外，先手总是获胜
+    """
+    if n <= 3:
+        return "B"  # 特殊情况：n=1,2,3时先手必败
+    else:
+        return "A"  # 其余所有情况先手必胜
+
+def main():
+    t = int(input())
+    for _ in range(t):
+        n = int(input())
+        print(solve(n))
+
+if __name__ == "__main__":
+    main()
+
+def main():
+    t = int(input())
+    for _ in range(t):
+        n = int(input())
+        print(solve(n))
+
+if __name__ == "__main__":
+    main()

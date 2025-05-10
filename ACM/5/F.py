@@ -18,3 +18,45 @@ Hiraethsoul最近沉迷于一款网游，但其中的装备强化系统令他崩
 下的逆元
 Python 性能要好
 '''
+
+import sys
+
+MOD = 10**9 + 7
+
+def solve():
+    n = int(sys.stdin.readline())
+    p = list(map(int, sys.stdin.readline().split()))
+    
+    inv_p = [0] * (n)
+    for i in range(n-1):
+        inv_p[i+1] = pow(p[i], MOD-2, MOD)
+    
+    E = [0] * (n + 2)  # 1-based to n
+    E[n] = 0
+    
+    # We'll compute S and T such that E[i] = S[i] + T[i] * E[1]
+    S = [0] * (n + 2)
+    T = [0] * (n + 2)
+    S[n] = 0
+    T[n] = 0
+    
+    for i in range(n-1, 0, -1):
+        # E[i] = 1 + (inv_p[i] * E[i+1] + (1 - inv_p[i]) * E[1])
+        # But E[i+1] is S[i+1] + T[i+1]*E[1]
+        part_success = inv_p[i] * S[i+1] % MOD
+        part_fail = (1 - inv_p[i]) % MOD
+        total = (1 + part_success) % MOD
+        coeff = (inv_p[i] * T[i+1] % MOD + part_fail) % MOD
+        S[i] = total
+        T[i] = coeff
+    
+    # E[1] = S[1] + T[1] * E[1]
+    # => E[1] - T[1]*E[1] = S[1]
+    # => E[1]*(1 - T[1]) = S[1]
+    # => E[1] = S[1] / (1 - T[1])
+    denom = (1 - T[1]) % MOD
+    inv_denom = pow(denom, MOD-2, MOD)
+    E1 = (S[1] * inv_denom) % MOD
+    print(E1)
+
+solve()

@@ -31,3 +31,33 @@ Alice
 如果从 b 中删除开头的几个 (可能是零个或全部) 字符和结尾的几个 (可能是零个或全部) 字符可以得到 a,那么字符串 a 是字符串 b 的子串
 Python 性能要好
 '''
+n = int(input())
+s = input().strip()
+
+def count_moves(s):
+    n = len(s)
+    moves = 0
+    i = 0
+    while i < n:
+        if i <= n - 4 and s[i] == '1' and s[i+1] == '0' and s[i+2] == '1' and s[i+3] == '0':
+            moves += 1
+            i += 4
+        elif i <= n - 3 and s[i] == '1' and s[i+1] == '1' and s[i+2] == '0':
+            moves += 1
+            i += 3
+        elif i <= n - 3 and s[i] == '1' and s[i+1] == '0' and s[i+2] == '0':
+            moves += 1
+            i += 3
+        elif i <= n - 2 and s[i] == '1' and s[i+1] == '0':
+            moves += 1
+            i += 2
+        else:
+            i += 1
+    return moves
+
+total_moves = count_moves(s)
+
+if total_moves % 2 == 1:
+    print("Alice")
+else:
+    print("Bob")

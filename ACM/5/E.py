@@ -27,3 +27,30 @@
 2≤N≤10 ^5 ,0≤Ai ≤10^9
 Python 性能要好
 '''
+import math
+import sys
+
+def solve():
+    N = int(sys.stdin.readline())
+    a_values = list(map(int, sys.stdin.readline().split()))
+
+    a = sorted(list(set(a_values)))
+    
+    m = len(a)
+
+    min_val = a[0]
+    max_val = a[-1]
+
+
+    common_difference = 0 
+    
+    for i in range(1, m):
+
+        diff = a[i] - a[i-1] 
+        common_difference = math.gcd(common_difference, diff)
+
+    num_terms = (max_val - min_val) / common_difference + 1
+    print(int(num_terms))
+
+if __name__ == '__main__':
+    solve()
