@@ -31,3 +31,100 @@
 ·1≤q≤5000
 使用C++编程，先分析题目，再编写程序。
 */
+#include <algorithm>
+#include <climits>
+#include <iostream>
+#include <queue>
+#include <vector>
+using namespace std;
+
+typedef pair<int, int> pii; // (distance, node)
+
+void dijkstra(int start, const vector<vector<pii>> &adj, vector<int> &dist) {
+    priority_queue<pii, vector<pii>, greater<pii>> pq;
+    dist[start] = 0;
+    pq.push({0, start});
+
+    while (!pq.empty()) {
+        int current_dist = pq.top().first;
+        int u = pq.top().second;
+        pq.pop();
+
+        if (current_dist > dist[u])
+            continue;
+
+        for (const auto &edge : adj[u]) {
+            int v = edge.first;
+            int w = edge.second;
+            if (dist[v] > dist[u] + w) {
+                dist[v] = dist[u] + w;
+                pq.push({dist[v], v});
+            }
+        }
+    }
+}
+
+int main() {
+    // ios::sync_with_stdio(false);
+    // cin.tie(nullptr);
+
+    int n, m;
+    cin >> n >> m;
+
+    vector<vector<pii>> adj(n + 1); // 1-based indexing
+    for (int i = 0; i < m; ++i) {
+        int u, v, w;
+        cin >> u >> v >> w;
+        adj[u].emplace_back(v, w);
+        adj[v].emplace_back(u, w);
+    }
+
+    // Precompute all pairs shortest paths
+    vector<vector<int>> dist(n + 1, vector<int>(n + 1, INT_MAX));
+    for (int u = 1; u <= n; ++u) {
+        dijkstra(u, adj, dist[u]);
+    }
+
+    int q;
+    cin >> q;
+    while (q--) {
+        int a, b, c;
+        cin >> a >> b >> c;
+
+        int min_distance = INT_MAX;
+
+        // Check all 6 possible orders
+        // a -> b -> c
+        if (dist[a][b] != INT_MAX && dist[b][c] != INT_MAX) {
+            min_distance = min(min_distance, dist[a][b] + dist[b][c]);
+        }
+        // a -> c -> b
+        if (dist[a][c] != INT_MAX && dist[c][b] != INT_MAX) {
+            min_distance = min(min_distance, dist[a][c] + dist[c][b]);
+        }
+        // b -> a -> c
+        if (dist[b][a] != INT_MAX && dist[a][c] != INT_MAX) {
+            min_distance = min(min_distance, dist[b][a] + dist[a][c]);
+        }
+        // b -> c -> a
+        if (dist[b][c] != INT_MAX && dist[c][a] != INT_MAX) {
+            min_distance = min(min_distance, dist[b][c] + dist[c][a]);
+        }
+        // c -> a -> b
+        if (dist[c][a] != INT_MAX && dist[a][b] != INT_MAX) {
+            min_distance = min(min_distance, dist[c][a] + dist[a][b]);
+        }
+        // c -> b -> a
+        if (dist[c][b] != INT_MAX && dist[b][a] != INT_MAX) {
+            min_distance = min(min_distance, dist[c][b] + dist[b][a]);
+        }
+
+        if (min_distance != INT_MAX) {
+            cout << min_distance << '\n';
+        } else {
+            cout << "impossible\n";
+        }
+    }
+
+    return 0;
+}
