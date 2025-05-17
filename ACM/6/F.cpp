@@ -45,3 +45,70 @@
 图可能不连通，避难所城市可以重复给出（视同一个避难所）。
 使用C++编程，先分析题目，再编写程序。
 */
+
+#include <climits>
+#include <iostream>
+#include <queue>
+#include <vector>
+using namespace std;
+
+typedef pair<int, int> pii; // (distance, node)
+
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    int n, m;
+    cin >> n >> m;
+
+    vector<vector<pii>> adj(n + 1); // adjacency list: (node, weight)
+    for (int i = 0; i < m; ++i) {
+        int u, v, w;
+        cin >> u >> v >> w;
+        adj[u].emplace_back(v, w);
+        adj[v].emplace_back(u, w);
+    }
+
+    int k;
+    cin >> k;
+    vector<int> shelters(k);
+    for (int i = 0; i < k; ++i) {
+        cin >> shelters[i];
+    }
+
+    vector<int> dist(n + 1, INT_MAX);
+    priority_queue<pii, vector<pii>, greater<pii>>
+        pq; // min-heap: (distance, node)
+
+    for (int s : shelters) {
+        dist[s] = 0;
+        pq.emplace(0, s);
+    }
+
+    while (!pq.empty()) {
+        auto [d, u] = pq.top();
+        pq.pop();
+        if (d > dist[u])
+            continue; // skip outdated entries
+        for (auto [v, w] : adj[u]) {
+            if (dist[v] > dist[u] + w) {
+                dist[v] = dist[u] + w;
+                pq.emplace(dist[v], v);
+            }
+        }
+    }
+
+    int q;
+    cin >> q;
+    while (q--) {
+        int x;
+        cin >> x;
+        if (dist[x] == INT_MAX) {
+            cout << "-1\n";
+        } else {
+            cout << dist[x] << '\n';
+        }
+    }
+
+    return 0;
+}
