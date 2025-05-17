@@ -31,3 +31,57 @@
 可能存在重复走廊（如两条 u-v 走廊视为独立路线）
 使用C++编程，先分析题目，再编写程序。
 */
+#include <iostream>
+#include <queue>
+#include <vector>
+
+using namespace std;
+
+const int MOD = 1e9 + 7;
+
+int main() {
+    int n, m;
+    cin >> n >> m;
+
+    vector<vector<int>> adj(n + 1); // 邻接表（节点编号从1开始）
+
+    // 构建图
+    for (int i = 0; i < m; ++i) {
+        int u, v;
+        cin >> u >> v;
+        adj[u].push_back(v);
+        adj[v].push_back(u); // 无向图
+    }
+
+    vector<int> dist(n + 1, -1); // 最短距离
+    vector<int> count(n + 1, 0); // 路径数量
+    queue<int> q;
+
+    dist[1] = 0;
+    count[1] = 1;
+    q.push(1);
+
+    while (!q.empty()) {
+        int u = q.front();
+        q.pop();
+        for (int v : adj[u]) {
+            if (dist[v] == -1) {
+                dist[v] = dist[u] + 1;
+                count[v] = count[u];
+                q.push(v);
+            } else if (dist[v] == dist[u] + 1) {
+                count[v] = (count[v] + count[u]) % MOD;
+            }
+        }
+    }
+
+    // 输出结果
+    for (int i = 1; i <= n; ++i) {
+        cout << count[i];
+        if (i < n)
+            cout << " ";
+    }
+    cout << endl;
+
+    return 0;
+}

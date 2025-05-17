@@ -31,3 +31,100 @@
 ·保证所有边的u!=v
 使用C++编程，先分析题目，再编写程序。
 */
+#include <climits>
+#include <iostream>
+#include <queue>
+#include <vector>
+using namespace std;
+
+struct Edge {
+    int u, v, w;
+};
+
+const int INF = INT_MAX / 2;
+
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    int n, m;
+    cin >> n >> m;
+    vector<Edge> edges(m);
+    for (int i = 0; i < m; ++i) {
+        cin >> edges[i].u >> edges[i].v >> edges[i].w;
+    }
+    int s, t;
+    cin >> s >> t;
+
+    vector<int> dist(n + 1, INF);
+    dist[s] = 0;
+
+    // Bellman-Ford algorithm
+    for (int i = 1; i <= n - 1; ++i) {
+        bool updated = false;
+        for (const auto &e : edges) {
+            if (dist[e.u] < INF && dist[e.v] > dist[e.u] + e.w) {
+                dist[e.v] = dist[e.u] + e.w;
+                updated = true;
+            }
+        }
+        if (!updated)
+            break;
+    }
+
+    // Check for negative cycles that can affect the path to t
+    vector<bool> in_negative_cycle(n + 1, false);
+    bool has_affecting_negative_cycle = false;
+
+    // Perform one more relaxation to find nodes that can be updated (in
+    // negative cycles)
+    for (const auto &e : edges) {
+        if (dist[e.u] < INF && dist[e.v] > dist[e.u] + e.w) {
+            in_negative_cycle[e.v] = true;
+        }
+    }
+
+    // Now check if any node in a negative cycle can reach t
+    if (!has_affecting_negative_cycle) {
+        // Build reverse graph for BFS
+        vector<vector<int>> reverse_adj(n + 1);
+        for (const auto &e : edges) {
+            reverse_adj[e.v].push_back(e.u);
+        }
+
+        vector<bool> visited(n + 1, false);
+        queue<int> q;
+
+        // Start BFS from t to see if it's reachable from any negative cycle
+        // node
+        q.push(t);
+        visited[t] = true;
+
+        while (!q.empty() && !has_affecting_negative_cycle) {
+            int u = q.front();
+            q.pop();
+
+            if (in_negative_cycle[u]) {
+                has_affecting_negative_cycle = true;
+                break;
+            }
+
+            for (int v : reverse_adj[u]) {
+                if (!visited[v]) {
+                    visited[v] = true;
+                    q.push(v);
+                }
+            }
+        }
+    }
+
+    if (dist[t] == INF) {
+        cout << "impossible" << endl;
+    } else if (has_affecting_negative_cycle) {
+        cout << "-INF" << endl;
+    } else {
+        cout << dist[t] << endl;
+    }
+
+    return 0;
+}
