@@ -19,3 +19,33 @@
 ·0≤m≤10^6
 使用C++编程，先分析题目，再编写程序。
 */
+#include <iostream>
+#include <unordered_set>
+#include <set>
+#include <vector>
+
+using namespace std;
+
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    int n, m;
+    cin >> n >> m;
+
+    vector<set<int>> adj(n + 1);
+    for (int i = 1; i < n + 1; ++i)
+        adj[i].insert(i);
+    for (int i = 0; i < m; ++i) {
+        int u, v;
+        cin >> u >> v;
+        adj[u].insert(v);
+        adj[v].insert(u);
+    }
+
+    for (int u = 1; u <= n; ++u) {
+        cout << adj[u].size() << (u == n ? "\n" : " ");
+    }
+
+    return 0;
+}
