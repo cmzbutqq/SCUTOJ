@@ -30,3 +30,97 @@
 
 使用C++编程，先分析题目，再编写程序。
 */
+#include <iostream>
+#include <queue>
+#include <unordered_map>
+#include <vector>
+using namespace std;
+
+struct Point {
+    int x, y;
+    Point():x(0),y(0){}
+    Point(int x, int y) : x(x), y(y) {}
+};
+
+int main() {
+    int N, M;
+    cin >> N >> M;
+    vector<string> maze(N);
+    Point start(-1, -1), end(-1, -1);
+    unordered_map<char, vector<Point>> teleport;
+
+    for (int i = 0; i < N; ++i) {
+        cin >> maze[i];
+        for (int j = 0; j < M; ++j) {
+            char c = maze[i][j];
+            if (c == '@') {
+                start.x = i;
+                start.y = j;
+            } else if (c == '=') {
+                end.x = i;
+                end.y = j;
+            } else if (c >= 'A' && c <= 'Z') {
+                teleport[c].emplace_back(i, j);
+            }
+        }
+    }
+
+    // Preprocess teleporters: for each pair, map each point to the other
+    unordered_map<int, unordered_map<int, Point>> teleport_map;
+    for (auto &entry : teleport) {
+        auto &points = entry.second;
+        if (points.size() == 2) {
+            teleport_map[points[0].x][points[0].y] = points[1];
+            teleport_map[points[1].x][points[1].y] = points[0];
+        }
+    }
+
+    // BFS
+    queue<pair<Point, int>> q;
+    q.push({start, 0});
+    vector<vector<bool>> visited(N, vector<bool>(M, false));
+    visited[start.x][start.y] = true;
+
+    int dx[] = {-1, 1, 0, 0};
+    int dy[] = {0, 0, -1, 1};
+
+    while (!q.empty()) {
+        auto current = q.front();
+        q.pop();
+        Point pos = current.first;
+        int time = current.second;
+
+        if (pos.x == end.x && pos.y == end.y) {
+            cout << time << endl;
+            return 0;
+        }
+
+        for (int i = 0; i < 4; ++i) {
+            int nx = pos.x + dx[i];
+            int ny = pos.y + dy[i];
+
+            if (nx < 0 || nx >= N || ny < 0 || ny >= M || maze[nx][ny] == '#' ||
+                visited[nx][ny]) {
+                continue;
+            }
+
+            visited[nx][ny] = true;
+            Point next(nx, ny);
+
+            // Check if the next position is a teleporter
+            if (teleport_map.count(nx) && teleport_map[nx].count(ny)) {
+                auto &teleport_dest = teleport_map[nx][ny];
+                if (!visited[teleport_dest.x][teleport_dest.y]) {
+                    visited[teleport_dest.x][teleport_dest.y] = true;
+                    q.push({teleport_dest, time + 1});
+                }
+            } else {
+                q.push({next, time + 1});
+            }
+        }
+    }
+
+    cout << "impossible"
+         << endl; // In case no path found (though problem says it's possible)
+    return 0;
+}
