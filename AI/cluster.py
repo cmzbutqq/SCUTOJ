@@ -88,32 +88,32 @@ class DBSCANCustom:
                 self.labels_[idx] = cluster_id
             i += 1
 
-    def _tune_eps(self, X):
-        """通过二分搜索找到能产生目标聚类数的 eps"""
-        low, high = self.eps_range
-        best_eps = self.eps
-        best_diff = float('inf')
+def _tune_eps(self, X):
+    """通过二分搜索找到能产生目标聚类数的 eps"""
+    low, high = self.eps_range
+    best_eps = self.eps
+    best_diff = float('inf')
 
-        for _ in range(self.max_search_iter):
-            mid = (low + high) / 2
-            temp = DBSCANCustom(eps=mid, min_samples=self.min_samples)
-            temp.fit(X)
-            n_clusters_found = temp.actual_clusters_
-            diff = abs(n_clusters_found - self.n_clusters)
+    for _ in range(self.max_search_iter):
+        mid = (low + high) / 2
+        temp = DBSCANCustom(eps=mid, min_samples=self.min_samples)
+        temp.fit(X)
+        n_clusters_found = temp.actual_clusters_
+        diff = abs(n_clusters_found - self.n_clusters)
 
-            if diff < best_diff:
-                best_diff = diff
-                best_eps = mid
+        if diff < best_diff:
+            best_diff = diff
+            best_eps = mid
 
-            if n_clusters_found < self.n_clusters:
-                high = mid
-            else:
-                low = mid
+        if n_clusters_found < self.n_clusters:
+            high = mid
+        else:
+            low = mid
 
-            if best_diff == 0:
-                break
+        if best_diff == 0:
+            break
 
-        return best_eps
+    return best_eps
 
 from sklearn.datasets import make_moons
 
