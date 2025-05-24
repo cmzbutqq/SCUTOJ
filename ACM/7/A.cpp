@@ -26,3 +26,60 @@
 ·坐标在[-10^9,10^9]范围内。
 使用C++编程，先分析题目，再编写程序。
 */
+#include <algorithm>
+#include <iostream>
+#include <vector>
+using namespace std;
+
+struct Point {
+    long long x, y;
+};
+
+// 判断三个点是否共线
+bool isCollinear(const Point &a, const Point &b, const Point &c) {
+    // 使用叉积判断共线：(b-a) × (c-a) = 0
+    // (b.x-a.x)*(c.y-a.y) - (b.y-a.y)*(c.x-a.x) = 0
+    return (b.x - a.x) * (c.y - a.y) == (b.y - a.y) * (c.x - a.x);
+}
+
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    int n;
+    cin >> n;
+
+    vector<Point> points(n);
+    for (int i = 0; i < n; i++) {
+        cin >> points[i].x >> points[i].y;
+    }
+
+    // 特殊情况：只有1个或2个点
+    if (n <= 2) {
+        cout << n << endl;
+        return 0;
+    }
+
+    int maxCount = 2; // 至少有2个点在一条直线上
+
+    // 枚举所有点对
+    for (int i = 0; i < n; i++) {
+        for (int j = i + 1; j < n; j++) {
+            int count = 2; // 包含点i和点j
+
+            // 检查其他点是否在通过点i和点j的直线上
+            for (int k = 0; k < n; k++) {
+                if (k != i && k != j) {
+                    if (isCollinear(points[i], points[j], points[k])) {
+                        count++;
+                    }
+                }
+            }
+
+            maxCount = max(maxCount, count);
+        }
+    }
+
+    cout << maxCount << endl;
+    return 0;
+}
