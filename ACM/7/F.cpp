@@ -31,3 +31,84 @@
 数据可能存在多个坐标相同的点。
 使用C++编程，先分析题目，再编写程序,仔细审题。考虑性能、边界情况与溢出
 */
+#include <algorithm>
+#include <iostream>
+#include <vector>
+using namespace std;
+
+struct Point {
+    long long x, y;
+    bool operator<(const Point &rhs) const {
+        return x < rhs.x || (x == rhs.x && y < rhs.y);
+    }
+    bool operator==(const Point &rhs) const { return x == rhs.x && y == rhs.y; }
+};
+
+// 叉积
+long long cross(const Point &O, const Point &A, const Point &B) {
+    return (A.x - O.x) * (B.y - O.y) - (A.y - O.y) * (B.x - O.x);
+}
+
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    int n;
+    cin >> n;
+    vector<Point> points(n);
+    for (int i = 0; i < n; ++i)
+        cin >> points[i].x >> points[i].y;
+
+    // 去重
+    sort(points.begin(), points.end());
+    points.erase(unique(points.begin(), points.end()), points.end());
+
+    int m = points.size();
+    if (m <= 2) {
+        cout << m << "\n";
+        for (auto &p : points)
+            cout << p.x << " " << p.y << "\n";
+        return 0;
+    }
+
+    vector<Point> hull;
+
+    // Lower hull
+    for (int i = 0; i < m; ++i) {
+        while (hull.size() >= 2 &&
+               cross(hull[hull.size() - 2], hull.back(), points[i]) < 0)
+            hull.pop_back();
+        hull.push_back(points[i]);
+    }
+
+    // Upper hull
+    size_t lower_size = hull.size();
+    for (int i = m - 2; i >= 0; --i) {
+        while (hull.size() > lower_size &&
+               cross(hull[hull.size() - 2], hull.back(), points[i]) < 0)
+            hull.pop_back();
+        hull.push_back(points[i]);
+    }
+
+    // 去掉最后一个点（起点重复）
+    hull.pop_back();
+
+    // 输出：起点为y最小，若相同取x最小，逆时针
+    // 找起点索引
+    int start_idx = 0;
+    for (int i = 1; i < hull.size(); ++i) {
+        if (hull[i].y < hull[start_idx].y ||
+            (hull[i].y == hull[start_idx].y && hull[i].x < hull[start_idx].x)) {
+            start_idx = i;
+        }
+    }
+
+    // 旋转使其为起点
+    rotate(hull.begin(), hull.begin() + start_idx, hull.end());
+
+    cout << hull.size() << "\n";
+    for (auto &p : hull)
+        cout << p.x << " " << p.y << "\n";
+
+    return 0;
+}
