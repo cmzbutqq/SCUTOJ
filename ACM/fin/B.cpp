@@ -1,6 +1,5 @@
 #include <iostream>
 #include <queue>
-#include <unordered_map>
 #include <vector>
 using namespace std;
 
@@ -10,61 +9,88 @@ int main() {
 
     int n;
     cin >> n;
-
     vector<vector<int>> adj(n + 1);
     for (int i = 0; i < n - 1; ++i) {
-        int u, v;
-        cin >> u >> v;
-        adj[u].push_back(v);
-        adj[v].push_back(u);
+        int a, b;
+        cin >> a >> b;
+        adj[a].push_back(b);
+        adj[b].push_back(a);
     }
 
     long long result = 0;
 
-    for (int u = 1; u <= n; ++u) {
-        vector<int> dist(n + 1, -1);
-        vector<int> parent(n + 1, -1);
-        queue<int> q;
-        q.push(u);
-        dist[u] = 0;
-        parent[u] = 0;
+    // 遍历每个节点，作为“中心”节点
+    for (int center = 1; center <= n; ++center) {
+        int degree = (int)adj[center].size();
+        if (degree < 3)
+            continue;
 
-        unordered_map<int, unordered_map<int, int>> subtree_counts_by_distance;
+        vector<int> depth(n + 1, -1);
+        vector<int> branchId(n + 1, -1);
+        vector<int> directBranch(n + 1, -1);
+
+        // 标记中心节点相邻节点的branch编号
+        for (int i = 0; i < degree; ++i) {
+            directBranch[adj[center][i]] = i;
+        }
+
+        // BFS计算深度和branchId
+        queue<int> q;
+        depth[center] = 0;
+        branchId[center] = -1;
+        q.push(center);
 
         while (!q.empty()) {
-            int v = q.front();
+            int curr = q.front();
             q.pop();
-            for (int neighbor : adj[v]) {
-                if (dist[neighbor] == -1) {
-                    dist[neighbor] = dist[v] + 1;
-                    parent[neighbor] = v;
-                    q.push(neighbor);
-
-                    int d = dist[neighbor];
-                    int p =
-                        (parent[neighbor] == u) ? neighbor : parent[neighbor];
-                    subtree_counts_by_distance[d][p]++;
+            for (auto nxt : adj[curr]) {
+                if (depth[nxt] == -1) {
+                    depth[nxt] = depth[curr] + 1;
+                    branchId[nxt] =
+                        (curr == center) ? directBranch[nxt] : branchId[curr];
+                    q.push(nxt);
                 }
             }
         }
 
-        for (const auto &[d, subtree_counts] : subtree_counts_by_distance) {
-            if (subtree_counts.size() < 3)
+        // 按branchId分组节点
+        vector<vector<int>> groups(degree);
+        for (int node = 1; node <= n; ++node) {
+            if (node == center)
+                continue;
+            groups[branchId[node]].push_back(node);
+        }
+
+        vector<long long> countOne(n + 1, 0), countTwo(n + 1, 0),
+            countThree(n + 1, 0);
+        vector<int> depthCounter(n + 1, 0);
+
+        for (int i = 0; i < degree; ++i) {
+            if (groups[i].empty())
                 continue;
 
-            long long sum1 = 0, sum2 = 0, sum3 = 0;
-            for (const auto &[p, cnt] : subtree_counts) {
-                sum1 += cnt;
-                sum2 += cnt * cnt;
-                sum3 += cnt * cnt * cnt;
+            vector<int> depthsSeen;
+            for (int node : groups[i]) {
+                int d = depth[node];
+                if (depthCounter[d] == 0)
+                    depthsSeen.push_back(d);
+                depthCounter[d]++;
             }
-            long long total =
-                (sum1 * sum1 * sum1 - 3 * sum1 * sum2 + 2 * sum3) / 6;
-            result += total;
+
+            for (int d : depthsSeen) {
+                long long c = depthCounter[d];
+                countThree[d] += countTwo[d] * c;
+                countTwo[d] += countOne[d] * c;
+                countOne[d] += c;
+                depthCounter[d] = 0;
+            }
+        }
+
+        for (int d = 1; d <= n; ++d) {
+            result += countThree[d];
         }
     }
 
-    cout << result << endl;
-
+    cout << result << "\n";
     return 0;
 }
