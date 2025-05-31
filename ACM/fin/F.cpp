@@ -1,146 +1,98 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-struct Task {
-    int a, b, id;
-};
-
-int N;
-Task tasks[205];
-int sumA = 0;
-const int INF = 1e9;
-
-// Johnson 排序规则
-bool johnson_cmp(const Task &x, const Task &y) {
-    if (min(x.a, x.b) == x.a)
-        return x.a < y.a; // a_i <= b_i 按 a_i 升序
-    else
-        return x.b > y.b; // a_i > b_i 按 b_i 降序
-}
-
-// 计算单组任务完成时间
-int calcCompletionTime(vector<Task> &group) {
-    if (group.empty())
-        return 0;
-    // 先根据 Johnson 规则排序
-    vector<Task> left, right;
-    for (auto &t : group) {
-        if (t.a <= t.b)
-            left.push_back(t);
-        else
-            right.push_back(t);
-    }
-    sort(left.begin(), left.end(),
-         [](const Task &x, const Task &y) { return x.a < y.a; });
-    sort(right.begin(), right.end(),
-         [](const Task &x, const Task &y) { return x.b > y.b; });
-    vector<Task> ordered;
-    ordered.insert(ordered.end(), left.begin(), left.end());
-    ordered.insert(ordered.end(), right.begin(), right.end());
-
-    // 计算完成时间
-    int timeA = 0; // 点餐结束时间累计
-    int maxCompletion = 0;
-    for (auto &t : ordered) {
-        timeA += t.a;                 // 点餐时间累积
-        int finishTime = timeA + t.b; // 该队员吃完时间
-        if (finishTime > maxCompletion)
-            maxCompletion = finishTime;
-    }
-    return maxCompletion;
-}
-
 int main() {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
+    int N;
     cin >> N;
-    for (int i = 1; i <= N; i++) {
-        cin >> tasks[i].a >> tasks[i].b;
-        tasks[i].id = i;
-        sumA += tasks[i].a;
+
+    vector<pair<int, int>> people(N);
+    // 每个人用 (b_i, a_i) 这样存，方便后面按 b 降序排序
+    for (int i = 0; i < N; i++) {
+        int a, b;
+        cin >> a >> b;
+        people[i] = {b, a};
     }
 
-    // DP数组，存储最小最大完成时间
-    // 为节省内存，只保留上一行状态
-    vector<int> dp_prev(sumA + 1, INF);
-    vector<int> dp_curr(sumA + 1, INF);
-    // 记录任务分配方案，用位掩码或者类似结构，这里为了节省内存只记录可行性即可，方案恢复可另写
-    // 由于N=200，存储方案需优化或者后续回溯
+    // 按 b_i（用餐时间）从大到小排序；若 b 相等，按 a 或者原来顺序也无妨
+    sort(people.begin(), people.end(),
+         [](const pair<int, int> &p1, const pair<int, int> &p2) {
+             if (p1.first != p2.first)
+                 return p1.first > p2.first;
+             else
+                 return p1.second < p2.second;
+         });
 
-    dp_prev[0] = 0;
-
-    // 用于回溯分组（存放第一组任务的集合）
-    vector<bitset<205>> group_mask_prev(sumA + 1);
-    vector<bitset<205>> group_mask_curr(sumA + 1);
-
+    // 将排序后的 a、b 分离到单独数组，方便后面索引
+    vector<int> a(N + 1), b(N + 1);
     for (int i = 1; i <= N; i++) {
-        fill(dp_curr.begin(), dp_curr.end(), INF);
-        for (int t = 0; t <= sumA; t++) {
-            if (dp_prev[t] == INF)
+        b[i] = people[i - 1].first;  // 用餐时间
+        a[i] = people[i - 1].second; // 点餐时间
+    }
+
+    // 计算前缀和 A[k] = a[1] + a[2] + ... + a[k]
+    vector<int> A(N + 1, 0);
+    for (int i = 1; i <= N; i++) {
+        A[i] = A[i - 1] + a[i];
+    }
+    int sumA = A[N]; // 所有人的 a_i 之和
+
+    // dp[s] 表示：在当前已处理人数 k 的情况下，如果窗口1的累积点餐时间恰好是
+    // s， 那么到目前为止“两个窗口的最坏完成时间(C +
+    // b)”的最小可能值是多少。不可达时为 INF。
+    const int INF = 1000000000;
+    vector<int> dp(sumA + 1, INF), next_dp(sumA + 1, INF);
+
+    // 初始：k = 0 时，窗口1的累积 = 0，两台都没做活，瓶颈完成时间 = 0
+    dp[0] = 0;
+
+    // 依次把第 k 个人（已经按 b 降序）分配到窗口1或窗口2
+    for (int k = 1; k <= N; k++) {
+        // 先把 next_dp 全部重置为 INF
+        fill(next_dp.begin(), next_dp.end(), INF);
+
+        // 遍历“窗口1 之前的累积点餐时间 s_old”
+        for (int s_old = 0; s_old <= sumA; s_old++) {
+            if (dp[s_old] == INF)
                 continue;
+            // 如果 dp[s_old] = INF 表示“前 k-1 个人不可能正好让窗口1累积为
+            // s_old”，跳过
 
-            // 放第一个窗口
-            int t1 = t + tasks[i].a;
-            if (t1 <= sumA) {
-                // 构建两组任务
-                vector<Task> group1, group2;
-                bitset<205> mask = group_mask_prev[t];
-                mask.set(i);
-
-                for (int j = 1; j <= N; j++) {
-                    if (j < i) {
-                        if (group_mask_prev[t].test(j))
-                            group1.push_back(tasks[j]);
-                        else
-                            group2.push_back(tasks[j]);
-                    }
-                }
-                group1.push_back(tasks[i]);
-
-                int c1 = calcCompletionTime(group1);
-                int c2 = calcCompletionTime(group2);
-                int val = max(c1, c2);
-                if (val < dp_curr[t1]) {
-                    dp_curr[t1] = val;
-                    group_mask_curr[t1] = mask;
-                }
+            // —— 方案 A：把第 k 个人放到窗口 1 ——
+            int s1 = s_old + a[k];
+            if (s1 <= sumA) {
+                // 他在窗口1点餐结束时刻 = s1；加上他自己的 b[k]
+                // 就是他的完成时刻
+                int finish_if_window1 = s1 + b[k];
+                // 两台机器原来的“最大(C+b)” = dp[s_old]
+                // 新的瓶颈 = max(dp[s_old], finish_if_window1)
+                int newBottleneckA = max(dp[s_old], finish_if_window1);
+                next_dp[s1] = min(next_dp[s1], newBottleneckA);
             }
 
-            // 放第二个窗口
-            // t 不变
-            {
-                vector<Task> group1, group2;
-                bitset<205> mask = group_mask_prev[t];
-                // 不set i, i 放第二组
-                for (int j = 1; j <= N; j++) {
-                    if (j < i) {
-                        if (group_mask_prev[t].test(j))
-                            group1.push_back(tasks[j]);
-                        else
-                            group2.push_back(tasks[j]);
-                    }
-                }
-                group2.push_back(tasks[i]);
-
-                int c1 = calcCompletionTime(group1);
-                int c2 = calcCompletionTime(group2);
-                int val = max(c1, c2);
-                if (val < dp_curr[t]) {
-                    dp_curr[t] = val;
-                    group_mask_curr[t] = mask;
-                }
-            }
+            // —— 方案 B：把第 k 个人放到窗口 2 ——
+            // 窗口1 的累积继续保持 s_old
+            // 窗口2 上，到第 k 个人前总共点餐 = (A[k-1] - s_old)，
+            // 加上 a[k] 后，他自己在窗口2点餐结束时刻 = A[k] - s_old
+            int t2 = A[k] - s_old;
+            int finish_if_window2 = t2 + b[k];
+            int newBottleneckB = max(dp[s_old], finish_if_window2);
+            // 放到窗口2，不改变窗口1的累积 => next index 仍然是 s_old
+            next_dp[s_old] = min(next_dp[s_old], newBottleneckB);
         }
-        swap(dp_prev, dp_curr);
-        swap(group_mask_prev, group_mask_curr);
+
+        // 用 next_dp 覆盖 dp，准备下一轮
+        dp.swap(next_dp);
     }
 
-    int ans = INF;
-    for (int t = 0; t <= sumA; t++) {
-        if (dp_prev[t] < ans)
-            ans = dp_prev[t];
+    // 最终答案 = min_{0 <= s <= sumA} dp[s]
+    int answer = INF;
+    for (int s = 0; s <= sumA; s++) {
+        answer = min(answer, dp[s]);
     }
-    cout << ans << "\n";
+
+    cout << answer << "\n";
     return 0;
 }
